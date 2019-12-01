@@ -24,7 +24,7 @@
 #' data should be returned with.  Options include Greenwich Mean Time
 #' \code{'gmt'}, Local Standard Time \code{'lst'}, and Local Standard/Local
 #' Daylight Time \code{'lst_ldt'}.  Local times refer to the local time of the
-#' specified station.  The default is \code{'lst_ldt'}
+#' specified station.  The default is \code{'gmt'}
 #'
 #' @param datum a character string indicating the datum that should be returned.
 #' See \href{https://tidesandcurrents.noaa.gov/api/}{CO-OPS API Documentation}
@@ -33,11 +33,15 @@
 #' @param interval a character string that specifies the interval for which
 #' Meteorological data is returned. The API defaults to every six minutes and
 #' does not need to be specified.  Other option include hourly \code{'h'} and
-#' \code{'hilo'}.  The retrieval  time period specified by \strong{start_date} and
-#' \strong{end_date} to create restrictions on the intervals that can be
+#' \code{'hilo'}.  The retrieval  time period specified by \strong{start_date}
+#' and \strong{end_date} to create restrictions on the intervals that can be
 #' returned. See
 #' \href{https://tidesandcurrents.noaa.gov/api/}{CO-OPS API Documentation} for
 #' details
+#'
+#' @param bin the bin number for the indicated currents station. If a bin is not
+#' specified for a PORTS station, the data is returned using a predefined
+#' real-time bin.
 #'
 #' @return a data frame.
 #' @export
@@ -57,10 +61,11 @@ query_coops_data <- function(station_id,
                              start_date,
                              end_date,
                              data_product,
-                             units = 'english',
-                             time_zone = 'lst_ldt',
+                             units = "english",
+                             time_zone = "gmt",
                              datum = NULL,
-                             interval = NULL){
+                             interval = NULL,
+                             bin = NULL) {
 
     base_url <- "https://tidesandcurrents.noaa.gov/api/datagetter"
 
@@ -73,16 +78,18 @@ query_coops_data <- function(station_id,
                          units = units,
                          time_zone = time_zone,
                          interval = interval,
-                         format = 'json')
+                         bin = bin,
+                         format = "json",
+                         application = "noaaoceans")
 
     # Set up the full url
     query_url <- httr::modify_url(base_url, query = query_params)
 
     # Execute the API call with a GET request.
-    API_call <- httr::GET(query_url)
+    api_call <- httr::GET(query_url)
 
     # Parsed the returned content as text
-    parsed <- httr::content(API_call, as = 'text')
+    parsed <- httr::content(api_call, as = "text", encoding = "UTF-8")
 
     # Convert the parsed text to a list
     df_list <- jsonlite::fromJSON(parsed,
@@ -90,12 +97,12 @@ query_coops_data <- function(station_id,
                                   flatten = TRUE)
 
     # Check if the call returned an error message
-    if(any(names(df_list) == 'error')){
+    if (any(names(df_list) == "error")) {
         stop(df_list$error$message)
     }
 
     # The data frame is stored as an element in a list. Here we extract it.
-    if(data_product == 'predictions'){
+    if (data_product == "predictions") {
         df <- df_list$predictions
     } else{
         df <- df_list$data
