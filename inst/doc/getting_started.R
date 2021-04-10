@@ -1,9 +1,9 @@
-## ---- include=FALSE, warning=FALSE, message=FALSE------------------------
+## ---- include=FALSE, warning=FALSE, message=FALSE-----------------------------
 library(httptest)
 
 start_vignette("getting_started")
 
-## ----find_station, message=FALSE, warning=FALSE--------------------------
+## ----find_station, message=FALSE, warning=FALSE-------------------------------
 library(noaaoceans)
 library(dplyr)
 library(ggplot2)
@@ -17,12 +17,12 @@ station_df <- list_coops_stations()
 station_df %>% dim()
 station_df %>% dplyr::as_tibble(.) %>% head()
 
-## ----wa_stations---------------------------------------------------------
+## ----wa_stations--------------------------------------------------------------
 # Filter to stations in Washington with Water Temp Sensor
 wa_station <- station_df %>% 
     filter(station_state == 'WA' & water_temp == '1')
 
-## ----query_api-----------------------------------------------------------
+## ----query_api----------------------------------------------------------------
 # Create an empty storage data frame. 
 water_temp <- data.frame()
 
@@ -38,12 +38,12 @@ for (i in wa_station$station_id) {
     water_temp <- water_temp %>% bind_rows(., query_df)
 }
 
-## ----inspect_data--------------------------------------------------------
+## ----inspect_data-------------------------------------------------------------
 dim(water_temp)
 names(water_temp)
 water_temp %>% head()
 
-## ----plot_data, fig.height=5, fig.width=7--------------------------------
+## ----plot_data, fig.height=5, fig.width=7-------------------------------------
 # Correct data types. 
 water_temp <- water_temp %>% 
     mutate(v = as.numeric(v), t = as.POSIXct(t))
@@ -59,7 +59,7 @@ water_temp %>%
          y = 'Average Water Temperature',
          title = 'Average Hourly Water Temperature In Washington During December 2018')
 
-## ----prepare_map_data----------------------------------------------------
+## ----prepare_map_data---------------------------------------------------------
 # Compute the average temperature by location. 
 station_average <- water_temp %>% 
     group_by(station) %>% 
@@ -76,7 +76,7 @@ station_average <- station_average %>%
 station_average %>% dim()
 station_average %>% as_tibble(.) %>% head()
 
-## ----make_map, fig.height=4, fig.width=6---------------------------------
+## ----make_map, fig.height=4, fig.width=6--------------------------------------
 # Get a map for Washington state.
 wa_map <- ggplot2::map_data('state') %>% 
     filter(region == 'washington')
@@ -98,7 +98,7 @@ ggplot(data = wa_map) +
          title = 'Average Water Temperature by Station') + 
   scale_color_continuous(name ="Average Water\n Temperature")
 
-## ----known_issue, error = TRUE-------------------------------------------
+## ----known_issue, error = TRUE------------------------------------------------
 neah_bay_january <- query_coops_data(station_id = '9443090',
                                      start_date = '20180101',
                                      end_date = '20180228',
@@ -106,7 +106,7 @@ neah_bay_january <- query_coops_data(station_id = '9443090',
                                      interval = 'h')
 
 
-## ----known_issue2--------------------------------------------------------
+## ----known_issue2-------------------------------------------------------------
 neah_bay_year <- query_coops_data(station_id = '9443090',
                                      start_date = '20180101',
                                      end_date = '20181231',
@@ -117,6 +117,6 @@ neah_bay_year %>% head()
 
 
 
-## ---- include=FALSE------------------------------------------------------
+## ---- include=FALSE-----------------------------------------------------------
 end_vignette()
 
